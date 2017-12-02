@@ -1,11 +1,12 @@
-package praktikum;
+package kw44;
+
+import kw43.Actor;
+import kw43.Reader;
 
 public class ReaderPrinter implements Actor{
 	private Reader reader;
-	private Printer printer;
 	
 	public ReaderPrinter(Transceiver transceiver){
-		printer = new Printer();
 		reader = new Reader(transceiver);
 	}
 
@@ -15,7 +16,7 @@ public class ReaderPrinter implements Actor{
 	
 	@Override
 	public void tell(String message, Actor sender) {
-		printer.tell(message, sender);
+		System.out.println(message);
 	}
 	
 	@Override

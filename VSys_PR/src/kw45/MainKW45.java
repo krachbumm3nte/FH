@@ -1,8 +1,10 @@
-package praktikum;
+package kw45;
 
 import java.io.IOException;
 
-public class MainKW46 {
+import kw43.Reader;
+
+public class MainKW45 {
 	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
 			System.err.println("wrong number of Arguments");
@@ -13,22 +15,17 @@ public class MainKW46 {
 			System.out.println("Starting tcp netcat in server mode...");
 			int port = Integer.parseInt(args[1]);
 			TcpSocket socket = new TcpSocket(port);
-			TcpReceiver receiver = new TcpReceiver(socket);
+			Receiver receiver = new Receiver(socket);
 			receiver.listen();
-			TcpTransmitter transmitter = new TcpTransmitter(socket);
-			Reader reader = new Reader(transmitter);
-			reader.read();
-		}
+			
 
-		else {
-			System.out.println("Starting tcp netcat in client mode...");
+		} else {
+			System.out.println("Starting netcat in client mode...");
 			int port = Integer.parseInt(args[1]);
-			TcpSocket socket = new TcpSocket(args[0], port);
-			TcpReceiver receiver = new TcpReceiver(socket);
-			receiver.listen();
-			TcpTransmitter transmitter = new TcpTransmitter(socket);
+			Transmitter transmitter = new Transmitter(new TcpSocket(args[0], port));
 			Reader reader = new Reader(transmitter);
 			reader.read();
+
 		}
 
 	}

@@ -1,4 +1,4 @@
-package praktikum;
+package kw43;
 
 import java.util.Scanner;
 

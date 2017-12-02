@@ -1,4 +1,4 @@
-package praktikum;
+package kw43;
 
 public class Transmitter implements Actor {
 	private final UdpSocket socket;

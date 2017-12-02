@@ -1,28 +1,28 @@
-package praktikum;
+package kw45;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
 public class TcpSocket {
 	private Socket socket;
-	private DataOutputStream out;
-	private BufferedReader in;
+	private InputStream in;
 
 
 	public TcpSocket(String host, int port) throws UnknownHostException, IOException {
 		socket = new Socket(host, port);		
-		out = new DataOutputStream(socket.getOutputStream());
-	}
+		in = socket.getInputStream();
+		}
 	
 	public TcpSocket(int port) throws IOException {
 		ServerSocket servS = new ServerSocket(port);
 		socket = servS.accept();
-		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		System.out.println("connected.");
+		in = socket.getInputStream();
 		servS.close();
 	}
 
@@ -32,17 +32,19 @@ public class TcpSocket {
 	
 	public void send(String message){
 		try {
-			out.writeBytes(message + "\n");
-			if(message.equals("\u0004")){
-				System.exit(0);
-			}
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+			writer.write(message + "\n");
+			writer.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public BufferedReader getIn() {
+	public InputStream getIn() {
 		return in;
 	}
-
+	
+	public void close() throws IOException{
+		socket.close();
+	}
 }

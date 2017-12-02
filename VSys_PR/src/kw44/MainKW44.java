@@ -1,4 +1,4 @@
-package praktikum;
+package kw44;
 
 import java.net.SocketException;
 import java.net.UnknownHostException;

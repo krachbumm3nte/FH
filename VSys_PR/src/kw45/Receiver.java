@@ -1,14 +1,18 @@
-package praktikum;
+package kw45;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
-public class TcpReceiver implements Runnable {
+import kw43.Actor;
+import kw43.Printer;
+
+public class Receiver implements Runnable {
 	private TcpSocket socket;
 
 	private Actor printer = new Printer();
 
-	public TcpReceiver(TcpSocket socket) {
+	public Receiver(TcpSocket socket) {
 		this.socket = socket;
 	}
 
@@ -18,7 +22,7 @@ public class TcpReceiver implements Runnable {
 
 	@Override
 	public void run() {
-		BufferedReader in = socket.getIn();
+		BufferedReader in = new BufferedReader(new InputStreamReader(socket.getIn()));
 		String line;
 		try {
 			while ((line = in.readLine()) != null) {

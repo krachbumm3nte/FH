@@ -1,8 +1,13 @@
-package praktikum;
+package kw44;
 
 import java.net.DatagramPacket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+
+import kw43.Actor;
+import kw43.Receiver;
+import kw43.Transmitter;
+import kw43.UdpSocket;
 
 public class Transceiver implements Actor {
 	
