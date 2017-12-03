@@ -31,6 +31,7 @@ public class Receiver implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		System.out.println("received EOT - Shutting down...");
 		System.exit(0);
 	}
 
