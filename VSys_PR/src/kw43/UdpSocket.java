@@ -4,10 +4,11 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
-public class UdpSocket {
+public class UdpSocket{
 	private int port;
 	private InetAddress addr;
 	private DatagramSocket socket;
@@ -21,7 +22,8 @@ public class UdpSocket {
 	public UdpSocket(String host, int port) throws SocketException, UnknownHostException {
 		this.port = port;
 		addr = InetAddress.getByName(host);
-		socket = new DatagramSocket(port);
+		socket = new DatagramSocket();
+		socket.connect(addr, port);
 	}
 
 	public boolean send(String message) {
@@ -51,8 +53,11 @@ public class UdpSocket {
 	}
 
 	public boolean connect(InetAddress addr, int port) {
-		if (!socket.isConnected()) {
+		if (!addr.equals(this.addr) || port != this.port) {
 			socket.connect(addr, port);
+			this.port = port;
+			this.addr = addr;
+			System.out.println("connected to new client");
 			return true;
 		}
 		return false;

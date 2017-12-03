@@ -18,11 +18,8 @@ public class Transceiver implements Actor {
 	public Transceiver(int port) throws SocketException, UnknownHostException{
 		UdpSocket socket = new UdpSocket(port);
 		receiver = new Receiver(socket);
-		DatagramPacket packet = receiver.receive();
 		receiver.listen();
 		readerPrinter = new ReaderPrinter(this);
-		socket.connect(packet.getAddress(), packet.getPort());
-		System.out.println("connected");
 		transmitter = new Transmitter(socket);
 		readerPrinter.read();
 
