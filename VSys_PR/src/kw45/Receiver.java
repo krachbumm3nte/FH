@@ -2,6 +2,7 @@ package kw45;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import kw43.Actor;
@@ -22,11 +23,15 @@ public class Receiver implements Runnable {
 
 	@Override
 	public void run() {
-		BufferedReader in = new BufferedReader(new InputStreamReader(socket.getIn()));
-		String line;
+		InputStream in = socket.getIn();
+		byte[] line = new byte[1024];
+		
 		try {
-			while ((line = in.readLine()) != null) {
-				printer.tell(line, null);
+			in.read(line);
+			while (!new String(line).contains("\u0004")) {
+				
+				printer.tell(new String(line), null);
+				in.read(line);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

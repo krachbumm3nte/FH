@@ -1,9 +1,7 @@
 package kw46;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-
+import java.io.InputStream;
 import kw43.Actor;
 import kw45.TcpSocket;
 
@@ -26,15 +24,15 @@ public class Transceiver implements Actor, Runnable {
 	public void run() {
 		try {
 
-			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getIn()));
-			String line;
-
-			while ((line = in.readLine()) != null) {
-				readerprinter.tell(line, null);
+			InputStream in = socket.getIn();
+			byte[] line = new byte[1024];
+			in.read(line);
+			while (new String(line) != "\u0004") {
+				readerprinter.tell(new String(line), null);
+				in.read(line);
 			}
-			System.out.println("Verbindung beendet");
-			readerprinter.shutdown();
-			socket.close();
+			System.out.println("Received EOT - Shutting down Input...");
+			in.close();
 
 		} catch (IOException e1) {
 			e1.printStackTrace();

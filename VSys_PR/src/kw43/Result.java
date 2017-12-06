@@ -164,9 +164,9 @@ public abstract class Result<V> {
 		return new Success<>(value);
 	}
 
-	public Result<V> orElse(Supplier<Result<V>> defaultValue) {
-		return map(x -> this).getOrElse(defaultValue);
-	}
+//	public Result<V> orElse(Supplier<Result<V>> defaultValue) {
+//		return map(x -> this).getOrElse(defaultValue);
+//	}
 
 	@SuppressWarnings("unchecked")
 	public static <V> Result<V> empty() {
