@@ -21,8 +21,12 @@ public class Reader implements Runnable {
 			line = scanner.nextLine();
 			transmitter.tell(line, null);
 		}
-		transmitter.shutdown();
+		transmitter.tell("\u0004", null);
 		scanner.close();
+	}
+	
+	public void close() {
+		
 	}
 
 }

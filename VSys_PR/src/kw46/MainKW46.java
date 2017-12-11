@@ -17,8 +17,6 @@ public class MainKW46 {
 			TcpSocket socket = new TcpSocket(port);
 			Transceiver transceiver = new Transceiver(socket);
 			transceiver.listen();
-			ReaderPrinter readerPrinter = new ReaderPrinter(transceiver);
-			readerPrinter.read();
 		}
 
 		else {
@@ -27,8 +25,6 @@ public class MainKW46 {
 			TcpSocket socket = new TcpSocket(args[0], port);
 			Transceiver transceiver = new Transceiver(socket);
 			transceiver.listen();
-			ReaderPrinter readerPrinter = new ReaderPrinter(transceiver);
-			readerPrinter.read();
 		}
 
 	}

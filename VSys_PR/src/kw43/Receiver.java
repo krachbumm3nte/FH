@@ -1,7 +1,6 @@
 package kw43;
 
 import java.net.DatagramPacket;
-import java.net.InetAddress;
 
 public class Receiver implements Runnable {
 	private final int LENGTH = 1024;
@@ -24,12 +23,17 @@ public class Receiver implements Runnable {
 	@Override
 	public void run() {
 		DatagramPacket packet;
-		while ((packet = socket.receive(LENGTH)).getData().toString() != "\u0004") {
-			printer.tell(new String(packet.getData(), packet.getOffset(), packet.getLength()), null);
+		String message;
+		while (true) {
+			packet = socket.receive(LENGTH);
+			message = new String(packet.getData(), packet.getOffset(), packet.getLength());
+			printer.tell(message , null);
 			socket.connect(packet.getAddress(), packet.getPort());
-		
+			if(message.equals("\u0004")) break;
 		
 		}
+		System.out.println("received EOT, shutting down Receiver...");
+		
 	}
 
 }

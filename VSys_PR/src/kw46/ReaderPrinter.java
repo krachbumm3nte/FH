@@ -5,10 +5,10 @@ import java.util.Scanner;
 import kw43.Actor;
 
 public class ReaderPrinter implements Actor, Runnable{
-	private Actor transmitter;
+	private Actor actor;
 	
 	public ReaderPrinter(Actor transceiver){
-		this.transmitter = transceiver;
+		this.actor = transceiver;
 	}
 
 	public void read(){
@@ -22,11 +22,11 @@ public class ReaderPrinter implements Actor, Runnable{
 		String line;
 		while (scanner.hasNextLine()) {
 			line = scanner.nextLine();
-			transmitter.tell(line, null);
+			actor.tell(line, null);
 		}
-//		transmitter.tell("\u0004", null);
-		transmitter.shutdown();
+		actor.tell("\u0004", null);
 		scanner.close();
+		System.out.println("EOT sent - Shutting down Output...");
 	}
 	
 	@Override

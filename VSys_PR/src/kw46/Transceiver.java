@@ -22,17 +22,16 @@ public class Transceiver implements Actor, Runnable {
 
 	@Override
 	public void run() {
-		try {
+		InputStream in = socket.getIn();
+		byte[] line = new byte[1024];
 
-			InputStream in = socket.getIn();
-			byte[] line = new byte[1024];
+		try {
 			in.read(line);
-			while (new String(line) != "\u0004") {
-				readerprinter.tell(new String(line), null);
+			while (!new String(line).contains("\u0004")) {
+				readerprinter.tell(new String(line).trim(), null);
 				in.read(line);
 			}
 			System.out.println("Received EOT - Shutting down Input...");
-			in.close();
 
 		} catch (IOException e1) {
 			e1.printStackTrace();
