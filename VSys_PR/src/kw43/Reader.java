@@ -22,6 +22,7 @@ public class Reader implements Runnable {
 			transmitter.tell(line, null);
 		}
 		transmitter.tell("\u0004", null);
+		System.out.println("EOT sent, shutting down Output...");
 		scanner.close();
 	}
 	

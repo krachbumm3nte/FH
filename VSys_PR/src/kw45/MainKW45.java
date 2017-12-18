@@ -2,6 +2,7 @@ package kw45;
 
 import java.io.IOException;
 
+import kw43.Printer;
 import kw43.Reader;
 
 public class MainKW45 {
@@ -15,7 +16,8 @@ public class MainKW45 {
 			System.out.println("Starting tcp netcat in server mode...");
 			int port = Integer.parseInt(args[1]);
 			TcpSocket socket = new TcpSocket(port);
-			Receiver receiver = new Receiver(socket);
+			Printer printer = new Printer();
+			Receiver receiver = new Receiver(socket, printer);
 			receiver.listen();
 			
 

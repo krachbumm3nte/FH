@@ -1,33 +1,22 @@
 package kw46;
 
-import java.util.Scanner;
-
 import kw43.Actor;
+import kw43.Reader;
 
-public class ReaderPrinter implements Actor, Runnable{
-	private Actor actor;
+public class ReaderPrinter implements Actor{
+	private Actor transmitter;
+	private Reader reader;
 	
 	public ReaderPrinter(Actor transceiver){
-		this.actor = transceiver;
+		this.transmitter = transceiver;
+		reader = new Reader(transmitter);
+		read();
 	}
 
 	public void read(){
-		new Thread(this).start();
+		reader.read();
 	}
 	
-	
-	@Override
-	public void run() {
-		Scanner scanner = new Scanner(System.in);
-		String line;
-		while (scanner.hasNextLine()) {
-			line = scanner.nextLine();
-			actor.tell(line, null);
-		}
-		actor.tell("\u0004", null);
-		scanner.close();
-		System.out.println("EOT sent - Shutting down Output...");
-	}
 	
 	@Override
 	public void tell(String message, Actor sender) {

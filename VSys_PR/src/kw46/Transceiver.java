@@ -1,42 +1,33 @@
 package kw46;
 
 import java.io.IOException;
-import java.io.InputStream;
 import kw43.Actor;
+import kw45.Receiver;
 import kw45.TcpSocket;
 
-public class Transceiver implements Actor, Runnable {
+public class Transceiver implements Actor {
 
 	private TcpSocket socket;
-	private ReaderPrinter readerprinter;
+	private Actor readerprinter;
+	private Receiver receiver;
+	private boolean connected;
 
 	public Transceiver(TcpSocket socket) {
 		this.socket = socket;
 		readerprinter = new ReaderPrinter(this);
-		readerprinter.read();
+		receiver = new Receiver(socket, readerprinter);
+		connected = false;
+	}
+
+	public Transceiver(TcpSocket socket, Actor readerprinter) {
+		this.socket = socket;
+		this.readerprinter = readerprinter;
+		receiver = new Receiver(socket, readerprinter);
+		connected = false;
 	}
 
 	public void listen() throws IOException {
-		new Thread(this).start();
-	}
-
-	@Override
-	public void run() {
-		InputStream in = socket.getIn();
-		byte[] line = new byte[1024];
-
-		try {
-			in.read(line);
-			while (!new String(line).contains("\u0004")) {
-				readerprinter.tell(new String(line).trim(), null);
-				in.read(line);
-			}
-			System.out.println("Received EOT - Shutting down Input...");
-
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-
+		receiver.listen();
 	}
 
 	@Override
@@ -46,11 +37,11 @@ public class Transceiver implements Actor, Runnable {
 
 	@Override
 	public void shutdown() {
-		try {
-			socket.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+
+	}
+
+	public boolean isConnected() {
+		return connected;
 	}
 
 }
