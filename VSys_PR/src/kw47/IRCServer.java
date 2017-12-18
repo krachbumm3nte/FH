@@ -83,7 +83,7 @@ public class IRCServer implements Runnable, Actor {
 			clients.put(nick, c);
 			clients.remove(old);
 
-			sendToAll("changed NICK of " + old + " to " + nick);
+			sendToAllOthers("changed NICK of " + old + " to " + nick, c);
 			if (c.getName() != null && c.getUser() != null) {
 				c.sendReply(001, null);
 			}
