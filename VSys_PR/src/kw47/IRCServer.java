@@ -17,9 +17,9 @@ public class IRCServer implements Runnable, Actor {
 	private int port;
 	private static int totalUsers;
 	private String host;
-	private static String unknownUser = "unknownUser_";
+	private String unknownUser = "unknownUser_";
 
-	private String version = "1.0";
+//	private String version = "1.0";
 
 	public IRCServer(int port) throws IOException {
 		clients = new HashMap<String, Client>();
@@ -40,14 +40,13 @@ public class IRCServer implements Runnable, Actor {
 				System.out.println(
 						"connected to a new User (" + totalUsers + " total User" + (totalUsers > 1 ? "s" : "") + ")");
 				Client c = new Client(s, this, name);
-				c.sendMessage("You joined an IRC server on " + host + ", port " + port + ".");
-				c.sendMessage("please log in using the NICK and USER commands before proceeding.");
+//				c.sendMessage("You joined an IRC server on " + host + ", port " + port + ".");
+//				c.sendMessage("please log in using the NICK and USER commands before proceeding.");
 				servS.close();
 				clients.put(name, c);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-
 		}
 	}
 
@@ -115,9 +114,10 @@ public class IRCServer implements Runnable, Actor {
 		clients.entrySet().stream().forEach(e -> e.getValue().sendMessage(message));
 		System.out.println("sending to all users: " + message);
 	}
-	
+
 	public void sendToAllOthers(String message, Client c) {
-		clients.entrySet().stream().filter(e -> e.getKey()!= c.getNick()).forEach(e -> e.getValue().sendMessage(message));
+		clients.entrySet().stream().filter(e -> e.getKey() != c.getNick())
+				.forEach(e -> e.getValue().sendMessage(message));
 	}
 
 }

@@ -16,12 +16,9 @@ public class Message {
 			args = text.substring(0, mark).split(" ");
 		}
 
-		else
+		else {
 			args = text.split(" ");
-	}
-
-	public boolean sendTo(Client c) {
-		return false;
+		}
 	}
 
 	public String[] getArgs() {
