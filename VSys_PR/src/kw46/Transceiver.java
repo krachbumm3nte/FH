@@ -44,4 +44,7 @@ public class Transceiver implements Actor {
 		return connected;
 	}
 
+	public String getHost() {
+		return socket.getHost();
+	}
 }

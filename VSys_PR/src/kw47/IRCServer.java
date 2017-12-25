@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,10 +17,10 @@ public class IRCServer implements Runnable, Actor {
 	private boolean running;
 	private int port;
 	private static int totalUsers;
-	private String host;
+	private String host, created;
 	private String unknownUser = "unknownUser_";
 
-//	private String version = "1.0";
+	private String version = "1.0";
 
 	public IRCServer(int port) throws IOException {
 		clients = new HashMap<String, Client>();
@@ -31,6 +32,7 @@ public class IRCServer implements Runnable, Actor {
 	@Override
 	public void run() {
 		System.out.println("Server running, waiting for connections...");
+		this.created = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
 		while (running) {
 			try {
 				ServerSocket servS = new ServerSocket(port);
@@ -40,8 +42,10 @@ public class IRCServer implements Runnable, Actor {
 				System.out.println(
 						"connected to a new User (" + totalUsers + " total User" + (totalUsers > 1 ? "s" : "") + ")");
 				Client c = new Client(s, this, name);
-//				c.sendMessage("You joined an IRC server on " + host + ", port " + port + ".");
-//				c.sendMessage("please log in using the NICK and USER commands before proceeding.");
+				// c.sendMessage("You joined an IRC server on " + host + ", port " + port +
+				// ".");
+				// c.sendMessage("please log in using the NICK and USER commands before
+				// proceeding.");
 				servS.close();
 				clients.put(name, c);
 			} catch (IOException e) {
@@ -65,8 +69,21 @@ public class IRCServer implements Runnable, Actor {
 		case "USER":
 			changeUser(sender, m);
 			break;
+
+		case "QUIT":
+			quitUser(sender, m);
+			break;
+
+		case "PRIVMSG":
+			sendPrivateMessage(sender, m);
+			break;
+
+		case "NOTICE":
+			notice(sender, m);
+			break;
+
 		default:
-			sender.sendMessage("Unknown command.");
+			sender.sendReply(421, m.getArgs()[0]);
 			break;
 		}
 	}
@@ -84,20 +101,52 @@ public class IRCServer implements Runnable, Actor {
 
 			sendToAllOthers("changed NICK of " + old + " to " + nick, c);
 			if (c.getName() != null && c.getUser() != null) {
-				c.sendReply(001, null);
+				welcomeUser(c);
 			}
 		}
 	}
 
+	public void quitUser(Client c, Message m) {
+		String quitmsg = m.getCmd() == null ? "Client quit" : m.getCmd();
+		sendToAllOthers(String.format("%s QUIT :%s", c.getFull(), quitmsg), c);
+		c.sendMessage(String.format("Closing Link: %s (%s)", c.getHost(), quitmsg));
+		clients.remove(c.getNick());
+	}
+
 	public void changeUser(Client c, Message m) {
+		if (c.getName() == null || c.getUser() == null) {
+			c.sendReply(462, null);
+		} else {
+			c.setName(m.getArgs()[1]);
+			c.setUser(m.getCmd());
 
-		c.setName(m.getArgs()[1]);
-		c.setUser(m.getCmd());
-
-		if (!c.getNick().contains(unknownUser)) {
-			c.sendReply(001, null);
+			if (!c.getNick().contains(unknownUser)) {
+				welcomeUser(c);
+			}
 		}
+	}
 
+	private void welcomeUser(Client c) {
+		c.sendReply(001, null);
+		c.sendReply(002, null);
+		c.sendReply(003, null);
+		c.sendReply(004, null);
+	}
+
+	private void sendPrivateMessage(Client sender, Message m) {
+		String target = m.getArgs()[0];
+		if (!clients.containsKey(target)) {
+			sender.sendReply(401, target);
+		} else {
+			clients.get(target).sendMessage(String.format("%s PRIVMSG %s :%s", sender.getFull(), target, m.getCmd()));
+		}
+	}
+
+	private void notice(Client sender, Message m) {
+		String target = m.getArgs()[0];
+		if (clients.containsKey(target)) {
+			clients.get(target).sendMessage(String.format("%s NOTICE %s :%s", sender.getFull(), target, m.getCmd()));
+		}
 	}
 
 	@Override
@@ -106,8 +155,16 @@ public class IRCServer implements Runnable, Actor {
 
 	}
 
+	public String getVersion() {
+		return version;
+	}
+
 	public String getHost() {
 		return host;
+	}
+
+	public String getCreated() {
+		return created;
 	}
 
 	public void sendToAll(String message) {

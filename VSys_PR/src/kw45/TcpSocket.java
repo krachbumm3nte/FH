@@ -48,4 +48,8 @@ public class TcpSocket {
 	public void close() throws IOException {
 		socket.close();
 	}
+
+	public String getHost() {
+		return socket.getInetAddress().toString();
+	}
 }
