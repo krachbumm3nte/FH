@@ -37,7 +37,13 @@ public class Transceiver implements Actor {
 
 	@Override
 	public void shutdown() {
-
+		try {
+			socket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
 	}
 
 	public boolean isConnected() {

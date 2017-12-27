@@ -32,7 +32,7 @@ public class IRCServer implements Runnable, Actor {
 	@Override
 	public void run() {
 		System.out.println("Server running, waiting for connections...");
-		this.created = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
+		this.created = new SimpleDateFormat("dd. MM. yyyy, HH:mm:ss").format(new java.util.Date());
 		while (running) {
 			try {
 				ServerSocket servS = new ServerSocket(port);
@@ -75,6 +75,7 @@ public class IRCServer implements Runnable, Actor {
 			break;
 
 		case "PRIVMSG":
+			System.out.println("sending private message...");
 			sendPrivateMessage(sender, m);
 			break;
 
@@ -110,11 +111,12 @@ public class IRCServer implements Runnable, Actor {
 		String quitmsg = m.getCmd() == null ? "Client quit" : m.getCmd();
 		sendToAllOthers(String.format("%s QUIT :%s", c.getFull(), quitmsg), c);
 		c.sendMessage(String.format("Closing Link: %s (%s)", c.getHost(), quitmsg));
+		c.shutdown();
 		clients.remove(c.getNick());
 	}
 
 	public void changeUser(Client c, Message m) {
-		if (c.getName() == null || c.getUser() == null) {
+		if (c.getName() != null || c.getUser() != null) {
 			c.sendReply(462, null);
 		} else {
 			c.setName(m.getArgs()[1]);
@@ -134,16 +136,18 @@ public class IRCServer implements Runnable, Actor {
 	}
 
 	private void sendPrivateMessage(Client sender, Message m) {
-		String target = m.getArgs()[0];
+		String target = m.getArgs()[1];
+		
 		if (!clients.containsKey(target)) {
 			sender.sendReply(401, target);
 		} else {
+			System.out.println("sending to " + target);
 			clients.get(target).sendMessage(String.format("%s PRIVMSG %s :%s", sender.getFull(), target, m.getCmd()));
 		}
 	}
 
 	private void notice(Client sender, Message m) {
-		String target = m.getArgs()[0];
+		String target = m.getArgs()[1];
 		if (clients.containsKey(target)) {
 			clients.get(target).sendMessage(String.format("%s NOTICE %s :%s", sender.getFull(), target, m.getCmd()));
 		}

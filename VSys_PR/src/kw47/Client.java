@@ -42,7 +42,7 @@ public class Client implements Actor {
 
 	@Override
 	public void shutdown() {
-
+		transceiver.shutdown();
 	}
 
 	public void sendReply(int num, String arg) {
@@ -57,11 +57,15 @@ public class Client implements Actor {
 			break;
 
 		case 003:
-			sendMessage(String.format("This server was created &s", server.getCreated()));
+			sendMessage(String.format("This server was created %s", server.getCreated()));
 			break;
 
 		case 004:
 			sendMessage(String.format("%s %s %s %s", server.getHost(), server.getVersion(), "ao", "mtov"));
+			break;
+			
+		case 401:
+			sendMessage(String.format("%s :No such Nick/channel", arg));
 			break;
 
 		case 421:
