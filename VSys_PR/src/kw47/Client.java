@@ -12,6 +12,7 @@ public class Client implements Actor {
 	Transceiver transceiver;
 	String nick, user, name, host;
 	IRCServer server;
+	private boolean receivedWelcome, isOP;
 
 	public Client(Socket s, IRCServer server, String nick) {
 		try {
@@ -25,6 +26,8 @@ public class Client implements Actor {
 		user = null;
 		name = null;
 		this.server = server;
+		receivedWelcome = false;
+		isOP = false;
 
 	}
 
@@ -63,21 +66,89 @@ public class Client implements Actor {
 		case 004:
 			sendMessage(String.format("%s %s %s %s", server.getHost(), server.getVersion(), "ao", "mtov"));
 			break;
-			
+
+		case 251:
+			sendMessage(String.format(":There are %d users and %d services on %d servers", server.getUserCount(),
+					server.getServiceCount(), server.getServerCount()));
+			break;
+
+		case 252:
+			sendMessage(String.format("%d :operator(s) online", server.getOperatorCount()));
+			break;
+
+		case 253:
+			sendMessage(String.format("%d :unknown connection(s)", server.getUnknownConnections()));
+			break;
+
+		case 254:
+			sendMessage(String.format("%d :channels formed", server.getChannelCount()));
+			break;
+
+		case 255:
+			sendMessage(String.format(":I have %d clients and %d servers", server.getClientCount(),
+					server.getServerCount()));
+			break;
+
+		case 311:
+			Client c = server.getClient(arg);
+			sendMessage(String.format("%s %s %s * :%s", arg, c.getUser(), c.getHost(), c.getName()));
+			break;
+
+		case 312:
+			sendMessage(String.format("%s %s :%s", arg, server.getHost(), server.getInfo()));
+			break;
+
+		case 318:
+			sendMessage(arg + " :End of WHOIS list");
+			break;
+
+		case 372:
+			sendMessage(":- " + arg);
+			break;
+
+		case 375:
+			sendMessage(String.format(":- %s Message of the day - ", arg));
+			break;
+
+		case 376:
+			sendMessage(":End of MOTD command");
+			break;
+
 		case 401:
 			sendMessage(String.format("%s :No such Nick/channel", arg));
+			break;
+
+		case 411:
+			sendMessage(String.format(":No recipient given (%s)", arg));
+			break;
+
+		case 412:
+			sendMessage(":No text to send");
 			break;
 
 		case 421:
 			sendMessage(String.format("%s :Unknown commmand", arg));
 			break;
 
+		case 431:
+			sendMessage(":No nickname given");
+			break;
+
 		case 433:
-			sendMessage(arg + ": Nickname is already in use.");
+			sendMessage(arg + ":Nickname is already in use.");
+			break;
+
+		case 451:
+			sendMessage(":You have not registered");
+			break;
+
+		case 461:
+			sendMessage(arg + ":Not enough parameters");
 			break;
 
 		case 462:
 			sendMessage("Unauthorized command (already registered)");
+			break;
 
 		default:
 			break;
@@ -114,5 +185,17 @@ public class Client implements Actor {
 
 	public String getFull() {
 		return String.format(":%s!%s@%s", nick, user, host);
+	}
+
+	public void welcome() {
+		receivedWelcome = true;
+	}
+
+	public boolean receivedWelcome() {
+		return receivedWelcome;
+	}
+
+	public boolean isOP() {
+		return isOP;
 	}
 }

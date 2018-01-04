@@ -4,10 +4,6 @@ public class Message {
 	private String sender, cmd;
 	private String[] args;
 
-	public static enum MsgType {
-		NICK, USER
-	}
-
 	public Message(String text) {
 		args = new String[15];
 		if (text.contains(":")) {
@@ -31,6 +27,13 @@ public class Message {
 
 	public String getCmd() {
 		return cmd;
+	}
+	
+	public boolean enoughParams(Client c, int count) {
+		boolean enough = args.length -1 + (cmd != null ? 1: 0) >= count;
+		System.out.println("enough = " + enough);
+		if(enough == false) c.sendReply(461, args[0]);
+		return enough;
 	}
 
 }
