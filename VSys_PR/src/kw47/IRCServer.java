@@ -18,7 +18,7 @@ public class IRCServer implements Runnable, Actor {
 	private int port;
 	private static int totalUsers;
 	private String host, created;
-	private String unknownUser = "unknownUser_";
+	private final String UNKNOWNUSER = "unknownUser_";
 	private String motd;
 
 	private String version = "1.0";
@@ -40,7 +40,7 @@ public class IRCServer implements Runnable, Actor {
 				ServerSocket servS = new ServerSocket(port);
 				Socket s = servS.accept();
 
-				String name = unknownUser + ++totalUsers;
+				String name = UNKNOWNUSER + ++totalUsers;
 				System.out.println(
 						"connected to a new User (" + totalUsers + " total User" + (totalUsers > 1 ? "s" : "") + ")");
 				Client c = new Client(s, this, name);
@@ -169,7 +169,7 @@ public class IRCServer implements Runnable, Actor {
 				c.setName(m.getArgs()[1]);
 				c.setUser(m.getCmd());
 
-				if (!c.getNick().contains(unknownUser) && !c.receivedWelcome()) {
+				if (!c.getNick().contains(UNKNOWNUSER) && !c.receivedWelcome()) {
 					welcomeUser(c);
 				}
 			}
