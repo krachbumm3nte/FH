@@ -9,6 +9,7 @@ import kw43.Actor;
 public class Receiver implements Runnable {
 	private TcpSocket socket;
 	private Actor printer;
+	private BufferedReader in;
 
 	public Receiver(TcpSocket socket, Actor printer) {
 		this.socket = socket;
@@ -22,16 +23,22 @@ public class Receiver implements Runnable {
 	@Override
 	public void run() {
 		try {
-			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getIn()));
+			in = new BufferedReader(new InputStreamReader(socket.getIn()));
 			String line;
-			while(!(line = in.readLine()).contains("\u0004")){
+			while((line = in.readLine()) != null){
 				printer.tell(line, null);
 				
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("received EOT, shutting down Input...");
 	}
-
+	
+	public void close() {
+		try {
+			in.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

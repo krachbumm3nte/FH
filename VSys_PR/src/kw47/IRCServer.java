@@ -6,6 +6,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import kw43.Actor;
@@ -13,15 +15,15 @@ import kw43.Actor;
 public class IRCServer implements Runnable, Actor {
 
 	private Map<String, Client> clients;
-
+	private Map<String, String> channels;
 	private boolean running;
-	private int port;
-	private static int totalUsers;
-	private String host, created;
+	private int port, totalUsers;
+	private String host, created, motd;
 	private String unknownUser = "unknownUser_";
-	private String motd;
 
 	private String version = "1.0";
+	
+
 
 	public IRCServer(int port) throws IOException {
 		clients = new HashMap<String, Client>();
@@ -29,20 +31,22 @@ public class IRCServer implements Runnable, Actor {
 		running = true;
 		host = Inet4Address.getLocalHost().getHostName();
 		motd = "Willkommen im Praktikum";
+		channels = new HashMap<String, String>();
 	}
 
 	@Override
 	public void run() {
 		System.out.println("Server running, waiting for connections...");
-		created = new SimpleDateFormat("dd. MM. yyyy, HH:mm:ss").format(new java.util.Date());
+		created = new SimpleDateFormat("dd. MM. yyyy, HH:mm:ss")
+				.format(new java.util.Date());
 		while (running) {
 			try {
 				ServerSocket servS = new ServerSocket(port);
 				Socket s = servS.accept();
 
 				String name = unknownUser + ++totalUsers;
-				System.out.println(
-						"connected to a new User (" + totalUsers + " total User" + (totalUsers > 1 ? "s" : "") + ")");
+				System.out.println("connected to a new User (" + totalUsers
+						+ " total User" + (totalUsers > 1 ? "s" : "") + ")");
 				Client c = new Client(s, this, name);
 				servS.close();
 				clients.put(name, c);
@@ -58,14 +62,12 @@ public class IRCServer implements Runnable, Actor {
 	}
 
 	public void sendMessage(String message, Client sender) {
+		System.out.println("received message : " + message);
 		Message m = new Message(message);
-		// if (!sender.receivedWelcome() && (m.getArgs()[0] != "NICK" || m.getArgs()[0]
-		// != "USER")) {
-		// sender.sendReply(451, null);
-		// } else {
-		switch (m.getArgs()[0]) {
+
+		switch (m.getCommand()) {
 		case "NICK":
-			changeNick(sender, m.getArgs()[1]);
+			changeNick(sender, m.getArgs()[0]);
 			break;
 
 		case "USER":
@@ -102,17 +104,33 @@ public class IRCServer implements Runnable, Actor {
 		case "WHOIS":
 			whoIs(sender, m);
 			break;
+			
+		case "JOIN":
+			joinChannel(sender, m);
+			break;
 
 		default:
-			sender.sendReply(421, m.getArgs()[0]);
+			sender.sendReply(421, m.getCommand());
 			break;
 		}
 	}
-	// }
+
+	private void joinChannel(Client sender, Message m) {
+		String channel = m.getArgs()[0];
+		if(!channels.containsKey(channel)) {
+			channels.put(channel, "No topic is set");
+		}
+		sender.join(channel);
+		
+		if(channels.get(channel) != null) sender.sendReply(332, String.format("%s :%s", channel, channels.get(channel)));
+	}
+	
+	
+
 
 	private void whoIs(Client sender, Message m) {
 		if (m.enoughParams(sender, 1)) {
-			String nick = m.getArgs()[1];
+			String nick = m.getArgs()[0];
 			if (!clients.containsKey(nick)) {
 				sender.sendReply(401, nick);
 			} else {
@@ -147,16 +165,18 @@ public class IRCServer implements Runnable, Actor {
 			clients.remove(old);
 
 			sendToAllOthers("changed NICK of " + old + " to " + nick, c);
-			if (c.getName() != null && c.getUser() != null && !c.receivedWelcome()) {
+			if (c.getName() != null && c.getUser() != null
+					&& !c.receivedWelcome()) {
 				welcomeUser(c);
 			}
 		}
 	}
 
 	public void quitUser(Client c, Message m) {
-		String quitmsg = m.getCmd() == null ? "Client quit" : m.getCmd();
+		String quitmsg = m.getText() == null ? "Client quit" : m.getText();
 		sendToAllOthers(String.format("%s QUIT :%s", c.getFull(), quitmsg), c);
-		c.sendMessage(String.format("Closing Link: %s (%s)", c.getHost(), quitmsg));
+		c.sendMessage(String.format("Closing Link: %s (%s)", c.getHost(),
+				quitmsg));
 		c.shutdown();
 		clients.remove(c.getNick());
 	}
@@ -166,8 +186,8 @@ public class IRCServer implements Runnable, Actor {
 			if (c.getName() != null || c.getUser() != null) {
 				c.sendReply(462, null);
 			} else {
-				c.setName(m.getArgs()[1]);
-				c.setUser(m.getCmd());
+				c.setName(m.getArgs()[0]);
+				c.setUser(m.getText());
 
 				if (!c.getNick().contains(unknownUser) && !c.receivedWelcome()) {
 					welcomeUser(c);
@@ -185,24 +205,28 @@ public class IRCServer implements Runnable, Actor {
 	}
 
 	private void sendPrivateMessage(Client sender, Message m) {
-		String target = m.getArgs()[1];
+		String target = m.getArgs()[0];
 
 		if (target == null) {
 			sender.sendReply(411, null);
 		} else if (!clients.containsKey(target)) {
 			sender.sendReply(401, target);
-		} else if (m.getCmd() == null) {
-			sender.sendReply(412, m.getArgs()[0]);
+		} else if (m.getText() == null) {
+			sender.sendReply(412, m.getCommand());
 		} else {
 			System.out.println("sending to " + target);
-			clients.get(target).sendMessage(String.format("%s PRIVMSG %s :%s", sender.getFull(), target, m.getCmd()));
+			clients.get(target).sendMessage(
+					String.format("%s PRIVMSG %s :%s", sender.getFull(),
+							target, m.getText()));
 		}
 	}
 
 	private void notice(Client sender, Message m) {
-		String target = m.getArgs()[1];
+		String target = m.getArgs()[0];
 		if (clients.containsKey(target)) {
-			clients.get(target).sendMessage(String.format("%s NOTICE %s :%s", sender.getFull(), target, m.getCmd()));
+			clients.get(target).sendMessage(
+					String.format("%s NOTICE %s :%s", sender.getFull(), target,
+							m.getText()));
 		}
 	}
 
@@ -216,8 +240,7 @@ public class IRCServer implements Runnable, Actor {
 
 	@Override
 	public void shutdown() {
-		// TODO Auto-generated method stub
-
+		//todo
 	}
 
 	public String getVersion() {
@@ -233,7 +256,8 @@ public class IRCServer implements Runnable, Actor {
 	}
 
 	public void sendToAll(String message) {
-		clients.entrySet().stream().forEach(e -> e.getValue().sendMessage(message));
+		clients.entrySet().stream()
+				.forEach(e -> e.getValue().sendMessage(message));
 		System.out.println("sending to all users: " + message);
 	}
 
@@ -247,7 +271,8 @@ public class IRCServer implements Runnable, Actor {
 	}
 
 	public int getUserCount() {
-		return (int) clients.entrySet().stream().filter(e -> e.getValue().receivedWelcome()).count();
+		return (int) clients.entrySet().stream()
+				.filter(e -> e.getValue().receivedWelcome()).count();
 	}
 
 	public int getServiceCount() {
@@ -261,16 +286,17 @@ public class IRCServer implements Runnable, Actor {
 	}
 
 	public int getOperatorCount() {
-		return (int) clients.entrySet().stream().filter(e -> e.getValue().isOP()).count();
+		return (int) clients.entrySet().stream()
+				.filter(e -> e.getValue().isOP()).count();
 	}
 
 	public int getUnknownConnections() {
-		return (int) clients.entrySet().stream().filter(e -> !e.getValue().receivedWelcome()).count();
+		return (int) clients.entrySet().stream()
+				.filter(e -> !e.getValue().receivedWelcome()).count();
 	}
 
 	public int getChannelCount() {
-		return 0;
-		// TODO
+		return channels.size();
 	}
 
 	public Client getClient(String nick) {

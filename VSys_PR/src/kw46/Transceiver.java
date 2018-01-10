@@ -38,12 +38,12 @@ public class Transceiver implements Actor {
 	@Override
 	public void shutdown() {
 		try {
-			socket.close();
+			socket.closeIn();
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
+
 	}
 
 	public boolean isConnected() {
