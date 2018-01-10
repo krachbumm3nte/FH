@@ -34,7 +34,7 @@ public class IRCServer implements Runnable, Actor {
 	@Override
 	public void run() {
 		System.out.println("Server running, waiting for connections...");
-		this.created = new SimpleDateFormat("dd. MM. yyyy, HH:mm:ss").format(new java.util.Date());
+		created = new SimpleDateFormat("dd. MM. yyyy, HH:mm:ss").format(new java.util.Date());
 		while (running) {
 			try {
 				ServerSocket servS = new ServerSocket(port);
