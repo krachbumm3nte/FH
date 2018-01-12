@@ -9,21 +9,20 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import kw43.Actor;
 
 public class IRCServer implements Runnable, Actor {
 
 	private Map<String, Client> clients;
-	private Map<String, String> channels;
+	private Map<String, Channel> channels;
 	private boolean running;
 	private int port, totalUsers;
 	private String host, created, motd;
 	private String unknownUser = "unknownUser_";
 
 	private String version = "1.0";
-	
-
 
 	public IRCServer(int port) throws IOException {
 		clients = new HashMap<String, Client>();
@@ -31,7 +30,7 @@ public class IRCServer implements Runnable, Actor {
 		running = true;
 		host = Inet4Address.getLocalHost().getHostName();
 		motd = "Willkommen im Praktikum";
-		channels = new HashMap<String, String>();
+		channels = new HashMap<String, Channel>();
 	}
 
 	@Override
@@ -104,9 +103,13 @@ public class IRCServer implements Runnable, Actor {
 		case "WHOIS":
 			whoIs(sender, m);
 			break;
-			
+
 		case "JOIN":
 			joinChannel(sender, m);
+			break;
+
+		case "NAMES":
+			names(sender, m);
 			break;
 
 		default:
@@ -115,21 +118,48 @@ public class IRCServer implements Runnable, Actor {
 		}
 	}
 
-	private void joinChannel(Client sender, Message m) {
-		String channel = m.getArgs()[0];
-		if(!channels.containsKey(channel)) {
-			channels.put(channel, "No topic is set");
+	private void names(Client sender, Message m) {
+		String channel;
+		if ((channel = m.getArgs()[0]) != null) {
+			sender.sendReply(353, listNames(channel));
+		} else {
+			sender.sendReply(353, "#foobar :foobar1 foobar2 foobar3");
 		}
-		sender.join(channel);
-		
-		if(channels.get(channel) != null) sender.sendReply(332, String.format("%s :%s", channel, channels.get(channel)));
-	}
-	
-	
 
+		sender.sendReply(366, channel);
+
+	}
+
+	private String listNames(String channel) {
+		List<String> names = channels.get(channel).getClients();
+		StringBuilder sb = new StringBuilder();
+		sb.append(channel + ":");
+		names.forEach(e -> sb.append("\n\t" + e));
+		return sb.toString();
+	}
+
+	private void joinChannel(Client sender, Message m) {
+		if (!m.enoughParams(1)) {
+			sender.sendReply(461, m.getCommand());
+		} else {
+			String channel = m.getArgs()[0];
+			if (channel.charAt(0) != '#') {
+				sender.sendReply(476, channel);
+			} else {
+				if (!channels.containsKey(channel)) {
+					channels.put(channel, new Channel("No topic is set"));
+				}
+				sender.join(channel);
+				channels.get(channel).addClient(sender.getNick());
+				sender.sendReply(332, String.format("%s :%s", channel, channels
+						.get(channel).getTopic()));
+				names(sender, m);
+			}
+		}
+	}
 
 	private void whoIs(Client sender, Message m) {
-		if (m.enoughParams(sender, 1)) {
+		if (m.enoughParams(1)) {
 			String nick = m.getArgs()[0];
 			if (!clients.containsKey(nick)) {
 				sender.sendReply(401, nick);
@@ -138,6 +168,8 @@ public class IRCServer implements Runnable, Actor {
 				sender.sendReply(312, nick);
 				sender.sendReply(318, nick);
 			}
+		} else {
+			sender.sendReply(461, m.getCommand());
 		}
 	}
 
@@ -182,7 +214,7 @@ public class IRCServer implements Runnable, Actor {
 	}
 
 	public void changeUser(Client c, Message m) {
-		if (m.enoughParams(c, 2) == true) {
+		if (m.enoughParams(2)) {
 			if (c.getName() != null || c.getUser() != null) {
 				c.sendReply(462, null);
 			} else {
@@ -193,6 +225,8 @@ public class IRCServer implements Runnable, Actor {
 					welcomeUser(c);
 				}
 			}
+		} else {
+			c.sendReply(461, m.getCommand());
 		}
 	}
 
@@ -206,23 +240,33 @@ public class IRCServer implements Runnable, Actor {
 
 	private void sendPrivateMessage(Client sender, Message m) {
 		String target = m.getArgs()[0];
-
 		if (target == null) {
 			sender.sendReply(411, null);
-		} else if (!clients.containsKey(target)) {
-			sender.sendReply(401, target);
 		} else if (m.getText() == null) {
 			sender.sendReply(412, m.getCommand());
+		} else if (target.charAt(0) == '#') {
+			List<String> users = channels.get(target).getClients();
+			users.forEach(e -> clients.get(e).sendMessage(formatPrivateMessage(sender, m)));
 		} else {
-			System.out.println("sending to " + target);
-			clients.get(target).sendMessage(
-					String.format("%s PRIVMSG %s :%s", sender.getFull(),
-							target, m.getText()));
+			if(!clients.containsKey(target)) {
+				sender.sendReply(401, target);
+			}else {
+			clients.get(target).sendMessage(formatPrivateMessage(sender, m));
+			}
 		}
+	}
+
+	private String formatPrivateMessage(Client sender, Message m) {
+		return String.format("%s PRIVMSG %s :%s", sender.getFull(),
+				m.getArgs()[0], m.getText());
 	}
 
 	private void notice(Client sender, Message m) {
 		String target = m.getArgs()[0];
+		if (target.charAt(0) == '#') {
+			List<String> users = channels.get(target).getClients();
+			users.forEach(e -> clients.get(e).sendMessage(formatPrivateMessage(sender, m)));
+		}
 		if (clients.containsKey(target)) {
 			clients.get(target).sendMessage(
 					String.format("%s NOTICE %s :%s", sender.getFull(), target,
@@ -240,7 +284,7 @@ public class IRCServer implements Runnable, Actor {
 
 	@Override
 	public void shutdown() {
-		//todo
+		// todo
 	}
 
 	public String getVersion() {

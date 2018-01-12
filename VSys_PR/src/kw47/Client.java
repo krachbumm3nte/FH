@@ -109,6 +109,14 @@ public class Client implements Actor {
 		case 332:
 			sendMessage(arg);
 			break;
+			
+		case 353:
+			sendMessage(arg);
+			break;
+			
+		case 366:
+			sendMessage(arg + " :End of NAMES list");
+			break;
 
 		case 372:
 			sendMessage(":- " + arg);
@@ -156,6 +164,10 @@ public class Client implements Actor {
 
 		case 462:
 			sendMessage("Unauthorized command (already registered)");
+			break;
+			
+		case 476:
+			sendMessage(arg + " :Bad Channel Mask");
 			break;
 
 		default:

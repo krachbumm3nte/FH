@@ -41,11 +41,9 @@ public class Message {
 		return text;
 	}
 	
-	public boolean enoughParams(Client c, int count) {
-		boolean enough = args.length + (text != null ? 1: 0) >= count;
-		System.out.println("enough = " + enough);
-		if(enough == false) c.sendReply(461, args[0]);
-		return enough;
+	public boolean enoughParams(int count) {
+		return args.length + (text != null ? 1: 0) >= count;
+		
 	}
 	
 

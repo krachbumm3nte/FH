@@ -13,6 +13,15 @@ public class Channel {
 		topic = null;
 	}
 	
+	public Channel(String s) {
+		clients = new LinkedList<String>();
+		topic = s;
+	}
+	
+	public void setTopic(String s) {
+		topic = s;
+	}
+	
 	public String getTopic() {
 		return topic;
 	}
@@ -26,7 +35,7 @@ public class Channel {
 	}
 	
 	public void removeClient(String s) {
-		clients.remove(arg0)
+		clients.remove(s);
 	}
 	
 }
