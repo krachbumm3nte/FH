@@ -1,20 +1,32 @@
 package kw47;
 
+import java.util.Arrays;
+
 public class Message {
-	private String sender, cmd;
+	private String sender, text, command;
 	private String[] args;
 
-	public Message(String text) {
+	public Message(String string) {
 		args = new String[15];
-		if (text.contains(":")) {
-			int mark = text.indexOf(":");
-			cmd = text.substring(mark + 1, text.length());
-			args = text.substring(0, mark).split(" ");
+		if (string.contains(":")) {
+			int mark = string.indexOf(":");
+			text = string.substring(mark + 1, string.length());
+			String[] tempArgs = string.substring(0, mark).split(" ");
+			args = Arrays.copyOfRange(tempArgs, 1, tempArgs.length);
+			command = tempArgs[0];
+			System.out.println("command = " + command);
 		}
 
 		else {
-			args = text.split(" ");
+			String[] tempArgs = string.split(" ");
+			args = Arrays.copyOfRange(tempArgs, 1, tempArgs.length);
+			command = tempArgs[0];
+			System.out.println("command = " + command);
 		}
+	}
+	
+	public String getCommand() {
+		return command;
 	}
 
 	public String[] getArgs() {
@@ -25,15 +37,14 @@ public class Message {
 		return sender;
 	}
 
-	public String getCmd() {
-		return cmd;
+	public String getText() {
+		return text;
 	}
 	
-	public boolean enoughParams(Client c, int count) {
-		boolean enough = args.length -1 + (cmd != null ? 1: 0) >= count;
-		System.out.println("enough = " + enough);
-		if(enough == false) c.sendReply(461, args[0]);
-		return enough;
+	public boolean enoughParams(int count) {
+		return args.length + (text != null ? 1: 0) >= count;
+		
 	}
+	
 
 }

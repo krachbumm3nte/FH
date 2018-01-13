@@ -2,6 +2,8 @@ package kw47;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.LinkedList;
+import java.util.List;
 
 import kw43.Actor;
 import kw45.TcpSocket;
@@ -13,6 +15,7 @@ public class Client implements Actor {
 	String nick, user, name, host;
 	IRCServer server;
 	private boolean receivedWelcome, isOP;
+	private List<String> joinedChannels;
 
 	public Client(Socket s, IRCServer server, String nick) {
 		try {
@@ -28,6 +31,7 @@ public class Client implements Actor {
 		this.server = server;
 		receivedWelcome = false;
 		isOP = false;
+		joinedChannels = new LinkedList<String>();
 
 	}
 
@@ -101,6 +105,18 @@ public class Client implements Actor {
 		case 318:
 			sendMessage(arg + " :End of WHOIS list");
 			break;
+			
+		case 332:
+			sendMessage(arg);
+			break;
+			
+		case 353:
+			sendMessage(arg);
+			break;
+			
+		case 366:
+			sendMessage(arg + " :End of NAMES list");
+			break;
 
 		case 372:
 			sendMessage(":- " + arg);
@@ -148,6 +164,10 @@ public class Client implements Actor {
 
 		case 462:
 			sendMessage("Unauthorized command (already registered)");
+			break;
+			
+		case 476:
+			sendMessage(arg + " :Bad Channel Mask");
 			break;
 
 		default:
@@ -197,5 +217,9 @@ public class Client implements Actor {
 
 	public boolean isOP() {
 		return isOP;
+	}
+
+	public void join(String channel) {
+		joinedChannels.add(channel);
 	}
 }

@@ -45,6 +45,12 @@ public class TcpSocket {
 		return in;
 	}
 
+	
+	
+	public void closeIn() throws IOException {
+		socket.shutdownInput();
+	}
+	
 	public void close() throws IOException {
 		socket.close();
 	}
