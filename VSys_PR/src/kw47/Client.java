@@ -106,6 +106,10 @@ public class Client implements Actor {
 			sendMessage(arg + " :End of WHOIS list");
 			break;
 			
+		case 331:
+			sendMessage(arg + " :no topic is set.");
+			break;
+			
 		case 332:
 			sendMessage(arg);
 			break;
@@ -133,6 +137,10 @@ public class Client implements Actor {
 		case 401:
 			sendMessage(String.format("%s :No such Nick/channel", arg));
 			break;
+			
+		case 403:
+			sendMessage(arg + " :No such channel");
+			break;
 
 		case 411:
 			sendMessage(String.format(":No recipient given (%s)", arg));
@@ -152,6 +160,10 @@ public class Client implements Actor {
 
 		case 433:
 			sendMessage(arg + ":Nickname is already in use.");
+			break;
+			
+		case 442:
+			sendMessage(arg + ":You're not on that channel");
 			break;
 
 		case 451:
@@ -221,5 +233,17 @@ public class Client implements Actor {
 
 	public void join(String channel) {
 		joinedChannels.add(channel);
+	}
+	
+	public boolean isOnChannel(String channel) {
+		return joinedChannels.contains(channel);
+	}
+	
+	public void leaveChannel(String channel) {
+		joinedChannels.remove(channel);
+	}
+	
+	public List<String> getJoinedChannels() {
+		return joinedChannels;
 	}
 }

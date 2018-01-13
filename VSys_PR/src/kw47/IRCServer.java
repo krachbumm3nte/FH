@@ -110,9 +110,60 @@ public class IRCServer implements Runnable, Actor {
 			names(sender, m);
 			break;
 
+		case "PART":
+			part(sender, m);
+			break;
+
+		case "TOPIC":
+			setTopic(sender, m);
+			break;
+
 		default:
 			sender.sendReply(421, m.getCommand());
 			break;
+		}
+	}
+
+	private void setTopic(Client sender, Message m) {
+		String channel = m.getArgs()[0];
+		if (!m.enoughParams(1)) {
+			sender.sendReply(461, m.getCommand());
+		} else if (!channels.containsKey(channel)) {
+			sender.sendReply(403, channel);
+		} else if (!sender.isOnChannel(channel)) {
+			sender.sendReply(442, channel);
+		} else if (m.getText() == null) {
+			if (channels.get(channel).getTopic() == null) {
+				sender.sendReply(331, channel);
+			} else {
+				sender.sendReply(332, String.format("%s :%s", channel, channels.get(channel).getTopic()));
+			}
+		} else {
+			channels.get(channel).setTopic(m.getText());
+		}
+	}
+
+	private void part(Client sender, Message m) {
+
+		String channel = m.getArgs()[0];
+		if (!m.enoughParams(1)) {
+			sender.sendReply(461, m.getCommand());
+		} else if (!channels.containsKey(channel)) {
+			sender.sendReply(403, channel);
+		} else if (!sender.isOnChannel(channel)) {
+			sender.sendReply(442, channel);
+		} else {
+			sendToChannel(channel, String.format("%s: %s left: %s", channel, sender.getNick(),
+					m.getText() == null ? "left." : m.getText()), sender.getNick());
+			removeFromChannel(sender, channel);
+		}
+	}
+
+	private void removeFromChannel(Client sender, String channel) {
+		sender.leaveChannel(channel);
+		channels.get(channel).removeClient(sender.getNick());
+		if (channels.get(channel).isEmpty()) {
+			channels.remove(channel);
 		}
 	}
 
@@ -151,8 +202,14 @@ public class IRCServer implements Runnable, Actor {
 				channels.get(channel).addClient(sender.getNick());
 				sender.sendReply(332, String.format("%s :%s", channel, channels.get(channel).getTopic()));
 				names(sender, m);
+				sendToChannel(channel, String.format("%s: %s joined.", channel, sender.getNick()), sender.getNick());
 			}
 		}
+	}
+
+	private void sendToChannel(String channel, String message, String sender) {
+		List<String> users = channels.get(channel).getClients();
+		users.stream().filter(e -> !e.equals(sender)).forEach(e -> clients.get(e).sendMessage(message));
 	}
 
 	private void whoIs(Client sender, Message m) {
@@ -192,8 +249,9 @@ public class IRCServer implements Runnable, Actor {
 
 			clients.put(nick, c);
 			clients.remove(old);
-
-			sendToAllOthers("changed NICK of " + old + " to " + nick, c);
+			for (String s : c.getJoinedChannels()) {
+				sendToChannel(s,("changed NICK of " + old + " to " + nick), nick);
+			}
 			if (c.getName() != null && c.getUser() != null && !c.receivedWelcome()) {
 				welcomeUser(c);
 			}

@@ -38,4 +38,8 @@ public class Channel {
 		clients.remove(s);
 	}
 	
+	public boolean isEmpty() {
+		return clients.size() == 0;
+	}
+	
 }
