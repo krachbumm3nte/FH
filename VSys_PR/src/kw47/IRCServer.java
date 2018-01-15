@@ -6,11 +6,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 import kw43.Actor;
 
 public class IRCServer implements Runnable, Actor {
@@ -126,7 +123,7 @@ public class IRCServer implements Runnable, Actor {
 
 	private void setTopic(Client sender, Message m) {
 		String channel = m.getArgs()[0];
-		if (!m.enoughParams(1)) {
+		if (!m.hasEnoughParams(1)) {
 			sender.sendReply(461, m.getCommand());
 		} else if (!channels.containsKey(channel)) {
 			sender.sendReply(403, channel);
@@ -143,10 +140,10 @@ public class IRCServer implements Runnable, Actor {
 		}
 	}
 
-	private void part(Client sender, Message m) {
+	private synchronized void part(Client sender, Message m) {
 
 		String channel = m.getArgs()[0];
-		if (!m.enoughParams(1)) {
+		if (!m.hasEnoughParams(1)) {
 			sender.sendReply(461, m.getCommand());
 		} else if (!channels.containsKey(channel)) {
 			sender.sendReply(403, channel);
@@ -168,14 +165,13 @@ public class IRCServer implements Runnable, Actor {
 	}
 
 	private void names(Client sender, Message m) {
-		String channel;
-		if ((channel = m.getArgs()[0]) != null) {
-			sender.sendReply(353, listNames(channel));
+		if (m.getArgs() != null) {
+			sender.sendReply(353, listNames(m.getArgs()[0]));
 		} else {
 			sender.sendReply(353, "#foobar :foobar1 foobar2 foobar3");
 		}
 
-		sender.sendReply(366, channel);
+		sender.sendReply(366, "bla");
 
 	}
 
@@ -188,7 +184,7 @@ public class IRCServer implements Runnable, Actor {
 	}
 
 	private void joinChannel(Client sender, Message m) {
-		if (!m.enoughParams(1)) {
+		if (!m.hasEnoughParams(1)) {
 			sender.sendReply(461, m.getCommand());
 		} else {
 			String channel = m.getArgs()[0];
@@ -213,7 +209,7 @@ public class IRCServer implements Runnable, Actor {
 	}
 
 	private void whoIs(Client sender, Message m) {
-		if (m.enoughParams(1)) {
+		if (m.hasEnoughParams(1)) {
 			String nick = m.getArgs()[0];
 			if (!clients.containsKey(nick)) {
 				sender.sendReply(401, nick);
@@ -250,7 +246,7 @@ public class IRCServer implements Runnable, Actor {
 			clients.put(nick, c);
 			clients.remove(old);
 			for (String s : c.getJoinedChannels()) {
-				sendToChannel(s,("changed NICK of " + old + " to " + nick), nick);
+				sendToChannel(s, ("changed NICK of " + old + " to " + nick), nick);
 			}
 			if (c.getName() != null && c.getUser() != null && !c.receivedWelcome()) {
 				welcomeUser(c);
@@ -267,7 +263,7 @@ public class IRCServer implements Runnable, Actor {
 	}
 
 	public void changeUser(Client c, Message m) {
-		if (m.enoughParams(2)) {
+		if (m.hasEnoughParams(2)) {
 			if (c.getName() != null || c.getUser() != null) {
 				c.sendReply(462, null);
 			} else {

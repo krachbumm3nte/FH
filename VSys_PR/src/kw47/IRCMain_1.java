@@ -15,7 +15,8 @@ public class IRCMain_1 {
 
 		else if (args[0].equals("-l")) {
 			int port = Integer.parseInt(args[1]);
-			System.out.println("Starting IRC Server on " + Inet4Address.getLocalHost().getHostAddress() + ", port " + port + "...");
+			System.out.println("Starting IRC Server on " + Inet4Address.getLocalHost().getHostAddress() + ", port "
+					+ port + "...");
 			IRCServer server = new IRCServer(port);
 			server.run();
 		}

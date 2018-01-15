@@ -14,17 +14,15 @@ public class Message {
 			String[] tempArgs = string.substring(0, mark).split(" ");
 			args = Arrays.copyOfRange(tempArgs, 1, tempArgs.length);
 			command = tempArgs[0];
-			System.out.println("command = " + command);
 		}
 
 		else {
 			String[] tempArgs = string.split(" ");
 			args = Arrays.copyOfRange(tempArgs, 1, tempArgs.length);
 			command = tempArgs[0];
-			System.out.println("command = " + command);
 		}
 	}
-	
+
 	public String getCommand() {
 		return command;
 	}
@@ -40,11 +38,10 @@ public class Message {
 	public String getText() {
 		return text;
 	}
-	
-	public boolean enoughParams(int count) {
-		return args.length + (text != null ? 1: 0) >= count;
-		
+
+	public boolean hasEnoughParams(int count) {
+		return args.length + (text != null ? 1 : 0) >= count;
+
 	}
-	
 
 }

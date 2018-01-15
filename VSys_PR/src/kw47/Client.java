@@ -14,7 +14,7 @@ public class Client implements Actor {
 	Transceiver transceiver;
 	String nick, user, name, host;
 	IRCServer server;
-	private boolean receivedWelcome, isOP;
+	private boolean receivedWelcome, isOperator, isAway;
 	private List<String> joinedChannels;
 
 	public Client(Socket s, IRCServer server, String nick) {
@@ -30,7 +30,8 @@ public class Client implements Actor {
 		name = null;
 		this.server = server;
 		receivedWelcome = false;
-		isOP = false;
+		isOperator = false;
+		isAway = false;
 		joinedChannels = new LinkedList<String>();
 
 	}
@@ -105,19 +106,19 @@ public class Client implements Actor {
 		case 318:
 			sendMessage(arg + " :End of WHOIS list");
 			break;
-			
+
 		case 331:
 			sendMessage(arg + " :no topic is set.");
 			break;
-			
+
 		case 332:
 			sendMessage(arg);
 			break;
-			
+
 		case 353:
 			sendMessage(arg);
 			break;
-			
+
 		case 366:
 			sendMessage(arg + " :End of NAMES list");
 			break;
@@ -137,7 +138,7 @@ public class Client implements Actor {
 		case 401:
 			sendMessage(String.format("%s :No such Nick/channel", arg));
 			break;
-			
+
 		case 403:
 			sendMessage(arg + " :No such channel");
 			break;
@@ -161,7 +162,7 @@ public class Client implements Actor {
 		case 433:
 			sendMessage(arg + ":Nickname is already in use.");
 			break;
-			
+
 		case 442:
 			sendMessage(arg + ":You're not on that channel");
 			break;
@@ -177,7 +178,7 @@ public class Client implements Actor {
 		case 462:
 			sendMessage("Unauthorized command (already registered)");
 			break;
-			
+
 		case 476:
 			sendMessage(arg + " :Bad Channel Mask");
 			break;
@@ -228,21 +229,25 @@ public class Client implements Actor {
 	}
 
 	public boolean isOP() {
-		return isOP;
+		return isOperator;
+	}
+
+	public boolean isAway() {
+		return isAway;
 	}
 
 	public void join(String channel) {
 		joinedChannels.add(channel);
 	}
-	
+
 	public boolean isOnChannel(String channel) {
 		return joinedChannels.contains(channel);
 	}
-	
+
 	public void leaveChannel(String channel) {
 		joinedChannels.remove(channel);
 	}
-	
+
 	public List<String> getJoinedChannels() {
 		return joinedChannels;
 	}
